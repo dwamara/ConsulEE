@@ -10,8 +10,8 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>consulee-discovery</module>
+        <module>consulee</module>
+        <module>consulee-client</module>
     </modules>
-
 
 </project>
