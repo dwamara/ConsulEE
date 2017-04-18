@@ -23,31 +23,31 @@
  */
 package com.dwitech.eap.consulee.annotation;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Stereotype;
 import javax.enterprise.util.Nonbinding;
+import javax.inject.Qualifier;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Annotation for enabling application as ConsulEE client. Use this annotation to register the application (service) with
- * ConsulEE.
- *
+ * Annotation for looking up a service registered with Consul.
+ * 
  * @author Ivar Grimstad (ivar.grimstad@gmail.com)
  */
-@Stereotype
+@Qualifier
 @Retention(RUNTIME)
 @Documented
-@ApplicationScoped
-@Target(TYPE)
-public @interface EnableConsulEEClient {
-    /**
-     * The service name. This is the unique identifier for this service when it is registered with ConsulEE.
-     * @return The name of the service
-     */
-    @Nonbinding String serviceName();
+@Target({FIELD, METHOD})
+public @interface Consul {
+   
+   /**
+    * The name of the service.
+    * 
+    * @return The service name
+    */
+   @Nonbinding String serviceName() default "";
 }

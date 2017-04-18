@@ -21,4 +21,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.dwitech.eap.consulee;
+package com.dwitech.eap.consulee.annotation;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.inject.Stereotype;
+import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+
+import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+/**
+ * Annotation for enabling application as Consul client. Use this annotation to register the application (service) with
+ * Consul.
+ */
+@Stereotype
+@Retention(RUNTIME)
+@Documented
+@ApplicationScoped
+@Target(TYPE)
+public @interface ConsulClient {}

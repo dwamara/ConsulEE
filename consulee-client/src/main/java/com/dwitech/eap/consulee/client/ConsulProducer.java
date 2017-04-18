@@ -23,9 +23,9 @@
  */
 package com.dwitech.eap.consulee.client;
 
-import com.dwitech.eap.consulee.ConsulEEConfigurationException;
-import com.dwitech.eap.consulee.ConsulEEExtensionHelper;
-import com.dwitech.eap.consulee.annotation.ConsulEE;
+import com.dwitech.eap.consulee.ConsulConfigurationException;
+import com.dwitech.eap.consulee.annotation.Consul;
+import com.dwitech.eap.consulee.client.ConsulServiceClient.Builder;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.error.YAMLException;
 
@@ -36,53 +36,51 @@ import javax.enterprise.inject.Produces;
 import javax.enterprise.inject.spi.InjectionPoint;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Optional;
 import java.util.logging.Logger;
 
+import static com.dwitech.eap.consulee.ConsulExtensionHelper.isConsulEnabled;
+import static com.dwitech.eap.consulee.ConsulExtensionHelper.setServiceName;
+import static java.lang.Thread.currentThread;
+import static java.util.Optional.ofNullable;
+
 /**
- * CDI Producer for ConsulEEServiceClient.
- *
- * @author Ivar Grimstad (ivar.grimstad@gmail.com)
+ * CDI Producer for ConsulServiceClient.
  */
 @ApplicationScoped
-public class ConsulEEProducer {
+public class ConsulProducer {
 
     private static final Logger LOGGER = Logger.getLogger("eu.agilejava.snoopee");
 
     private Map<String, Object> consuleeConfig = Collections.EMPTY_MAP;
 
     /**
-     * Creates a ConsulEEServiceClient for the named service.
+     * Creates a ConsulServiceClient for the named service.
      *
      * @param ip The injection point
-     * @return a configured ConsulEE service client
+     * @return a configured Consul service client
      */
-    @ConsulEE
+    @Consul
     @Produces
     @Dependent
-    public ConsulEEServiceClient lookup(InjectionPoint ip) {
+    public ConsulServiceClient lookup(InjectionPoint ip) {
 
-        final String applicationName = ip.getAnnotated().getAnnotation(ConsulEE.class).serviceName();
+        final String applicationName = ip.getAnnotated().getAnnotation(Consul.class).serviceName();
 
         LOGGER.config(() -> "producing " + applicationName);
 
         String serviceUrl = "http://" + readProperty("consuleeService", consuleeConfig);
         LOGGER.config(() -> "Service URL: " + serviceUrl);
 
-        return new ConsulEEServiceClient.Builder(applicationName)
-                .serviceUrl(serviceUrl)
-                .build();
+        return new Builder(applicationName).serviceUrl(serviceUrl).build();
     }
 
     private String readProperty(final String key, Map<String, Object> snoopConfig) {
-        String property = Optional.ofNullable(System.getProperty(key))
+        String property = ofNullable(System.getProperty(key))
                 .orElseGet(() -> {
-                    String envProp = Optional.ofNullable(System.getenv(key))
+                    String envProp = ofNullable(System.getenv(key))
                             .orElseGet(() -> {
-                                String confProp = Optional.ofNullable(snoopConfig.get(key))
-                                        .orElseThrow(() -> {
-                                            return new ConsulEEConfigurationException(key + " must be configured either in consulee.yml or as env or system property");
-                                        })
+                                String confProp = ofNullable(snoopConfig.get(key))
+                                        .orElseThrow(() -> new ConsulConfigurationException(key + " must be configured either in consul.yml or as env or system property"))
                                         .toString();
                                 return confProp;
                             });
@@ -93,18 +91,18 @@ public class ConsulEEProducer {
     }
 
     /**
-     * Initializes the producer with the ConsulEE configuration properties.
+     * Initializes the producer with the Consul configuration properties.
      */
     @PostConstruct
     private void init() {
         try {
             Yaml yaml = new Yaml();
-            Map<String, Object> props = (Map<String, Object>) yaml.load(Thread.currentThread().getContextClassLoader().getResourceAsStream("/consulee.yml"));
+            Map<String, Object> props = (Map<String, Object>) yaml.load(currentThread().getContextClassLoader().getResourceAsStream("/consul.yml"));
 
-            consuleeConfig = (Map<String, Object>) props.get("consulee");
+            consuleeConfig = (Map<String, Object>) props.get("consul");
 
-            if (!ConsulEEExtensionHelper.isConsulEnabled()) {
-                ConsulEEExtensionHelper.setServiceName(readProperty("serviceName", consuleeConfig));
+            if (!isConsulEnabled()) {
+                setServiceName(readProperty("serviceName", consuleeConfig));
             }
 
         } catch (YAMLException e) {

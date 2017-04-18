@@ -21,34 +21,34 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.dwitech.eap.consulee;
+package com.dwitech.eap.consulee.client;
 
 import javax.ejb.ApplicationException;
 
 /**
- * This exception indicates that the ConsulEE configuration is erroneous.
+ * This exception is thrown if the Consul service is not available.
  *
  * @author Ivar Grimstad (ivar.grimstad@gmail.com)
  */
 @ApplicationException
-public class ConsulEEConfigurationException extends RuntimeException {
+public class ConsulServiceUnavailableException extends RuntimeException {
 
-    public ConsulEEConfigurationException() {
+    public ConsulServiceUnavailableException() {
     }
 
-    public ConsulEEConfigurationException(String message) {
+    public ConsulServiceUnavailableException(String message) {
         super(message);
     }
 
-    public ConsulEEConfigurationException(String message, Throwable cause) {
+    public ConsulServiceUnavailableException(String message, Throwable cause) {
         super(message, cause);
     }
 
-    public ConsulEEConfigurationException(Throwable cause) {
+    public ConsulServiceUnavailableException(Throwable cause) {
         super(cause);
     }
 
-    public ConsulEEConfigurationException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+    public ConsulServiceUnavailableException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
     }
 }

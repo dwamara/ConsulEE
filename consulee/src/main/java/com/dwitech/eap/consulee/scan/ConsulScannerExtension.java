@@ -23,43 +23,43 @@
  */
 package com.dwitech.eap.consulee.scan;
 
-import com.dwitech.eap.consulee.ConsulEEExtensionHelper;
-import com.dwitech.eap.consulee.annotation.EnableConsulEEClient;
+import com.dwitech.eap.consulee.annotation.EnableConsulClient;
 
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.spi.*;
 import java.util.logging.Logger;
 
+import static com.dwitech.eap.consulee.ConsulExtensionHelper.setConsulEnabled;
+import static com.dwitech.eap.consulee.ConsulExtensionHelper.setServiceName;
+
 /**
- * CDI Extension that scans for @EnableConsulEEClient annotations.
- *
+ * CDI Extension that scans for @EnableConsulClient annotations.
  * @author Ivar Grimstad (ivar.grimstad@gmail.com)
  */
-public class ConsulEEScannerExtension implements Extension {
+public class ConsulScannerExtension implements Extension {
     private static final Logger LOGGER = Logger.getLogger("com.dwitech.eap.consulee");
 
     private String serviceName;
     private boolean consulEnabled;
 
-    void beforeBeanDiscovery(@Observes BeforeBeanDiscovery bbd) {
-        LOGGER.config("Scanning for ConsulEE clients");
+    void beforeBeanDiscovery(@Observes BeforeBeanDiscovery beforeBeanDiscovery) {
+        LOGGER.config("Scanning for Consul clients");
     }
 
-    void afterBeanDiscovery(@Observes AfterBeanDiscovery abd, BeanManager bm) {
-        LOGGER.config("Discovering ConsulEE clients");
-        ConsulEEExtensionHelper.setServiceName(serviceName);
-        ConsulEEExtensionHelper.setConsulEnabled(consulEnabled);
-        LOGGER.config("Finished scanning for ConsulEE clients");
-        LOGGER.config("Finished scanning for ConsulEE clients");
+    void afterBeanDiscovery(@Observes AfterBeanDiscovery afterBeanDiscovery, BeanManager beanManager) {
+        LOGGER.config("Discovering Consul clients");
+        setServiceName(serviceName);
+        setConsulEnabled(consulEnabled);
+        LOGGER.config("Finished scanning for Consul clients");
     }
 
-    <T> void processAnnotatedType(@Observes @WithAnnotations(EnableConsulEEClient.class) ProcessAnnotatedType<T> pat) {
+    <T> void processAnnotatedType(@Observes @WithAnnotations(EnableConsulClient.class) ProcessAnnotatedType<T> pat) {
         // workaround for WELD bug revealed by JDK8u60
         final ProcessAnnotatedType<T> consulAnnotated = pat;
 
-        LOGGER.config(() -> "Found @EnableConsulEEClient annotated class: " + consulAnnotated.getAnnotatedType().getJavaClass().getName());
+        LOGGER.config(() -> "Found @EnableConsulClient annotated class: " + consulAnnotated.getAnnotatedType().getJavaClass().getName());
         consulEnabled = true;
-        serviceName = consulAnnotated.getAnnotatedType().getAnnotation(EnableConsulEEClient.class).serviceName();
-        LOGGER.config(() -> "ConsulEE Service name is: " + serviceName);
+        serviceName = consulAnnotated.getAnnotatedType().getAnnotation(EnableConsulClient.class).serviceName();
+        LOGGER.config(() -> "Consul Service name is: " + serviceName);
     }
 }

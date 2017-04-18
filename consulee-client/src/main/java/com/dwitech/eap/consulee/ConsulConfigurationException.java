@@ -21,33 +21,34 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.dwitech.eap.consulee.annotation;
+package com.dwitech.eap.consulee;
 
-import javax.enterprise.util.Nonbinding;
-import javax.inject.Qualifier;
-import java.lang.annotation.Documented;
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
-
-import static java.lang.annotation.ElementType.FIELD;
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import javax.ejb.ApplicationException;
 
 /**
- * Annotation for looking up a service registered with ConsulEE.
- * 
+ * This exception indicates that the Consul configuration is erroneous.
+ *
  * @author Ivar Grimstad (ivar.grimstad@gmail.com)
  */
-@Qualifier
-@Retention(RUNTIME)
-@Documented
-@Target({FIELD, METHOD})
-public @interface ConsulEE {
-   
-   /**
-    * The name of the service.
-    * 
-    * @return The service name
-    */
-   @Nonbinding String serviceName() default "";
+@ApplicationException
+public class ConsulConfigurationException extends RuntimeException {
+
+    public ConsulConfigurationException() {
+    }
+
+    public ConsulConfigurationException(String message) {
+        super(message);
+    }
+
+    public ConsulConfigurationException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public ConsulConfigurationException(Throwable cause) {
+        super(cause);
+    }
+
+    public ConsulConfigurationException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+        super(message, cause, enableSuppression, writableStackTrace);
+    }
 }

@@ -23,60 +23,66 @@
  */
 package com.dwitech.eap.consulee.scan;
 
-import com.dwitech.eap.consulee.ConsulEEConfigurationException;
-import com.dwitech.eap.consulee.ConsulEEExtensionHelper;
-import com.dwitech.eap.consulee.client.ConsulEEConfig;
+import com.dwitech.eap.consulee.ConsulConfigurationException;
+import com.dwitech.eap.consulee.client.ConsulConfig;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.error.YAMLException;
+import com.orbitz.consul.AgentClient;
+import com.orbitz.consul.NotRegisteredException;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 import javax.ejb.*;
-import javax.websocket.*;
-import java.io.IOException;
-import java.net.URI;
-import java.util.Calendar;
+import javax.websocket.ClientEndpoint;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Optional;
 import java.util.logging.Logger;
+
+import static com.dwitech.eap.consulee.ConsulExtensionHelper.getServiceName;
+import static com.dwitech.eap.consulee.ConsulExtensionHelper.isConsulEnabled;
+import static com.orbitz.consul.Consul.builder;
+import static java.lang.Integer.valueOf;
+import static java.lang.System.getProperty;
+import static java.lang.Thread.currentThread;
+import static java.util.Calendar.getInstance;
+import static java.util.Optional.ofNullable;
+import static java.util.logging.Logger.getLogger;
 
 /**
  * Registers with Consul and gives heartbeats every 3 second.
  */
 @ClientEndpoint @Singleton @Startup
-public class ConsulEERegistrationClient {
-    private static final Logger LOGGER = Logger.getLogger("com.dwitech.eap.consulee");
+public class ConsulRegistrationClient {
+    private static final Logger LOGGER = getLogger("com.dwitech.eap.consulee");
     private static final String REGISTER_ENDPOINT = "consulee";
-    private static final String STATUS_ENDPOINT = "snoopeestatus/";
 
-    private String serviceUrl;
-    private final ConsulEEConfig applicationConfig = new ConsulEEConfig();
+    private final ConsulConfig applicationConfig = new ConsulConfig();
+    private AgentClient agentClient;
 
     @Resource private TimerService timerService;
 
     @PostConstruct
     private void init() {
-        LOGGER.config("Checking if ConsulEE is enabled");
-        if (ConsulEEExtensionHelper.isConsulEnabled()) {
+        LOGGER.config("Checking if Consul is enabled");
+        if (isConsulEnabled()) {
             try {
                 readConfiguration();
                 LOGGER.config(() -> "Registering " + applicationConfig.getServiceName());
                 register(applicationConfig.getServiceName());
-            } catch (ConsulEEConfigurationException e) {
-                LOGGER.severe(() -> "ConsulEE is enabled but not configured properly: " + e.getMessage());
+            } catch (ConsulConfigurationException e) {
+                LOGGER.severe(() -> "Consul is enabled but not configured properly: " + e.getMessage());
             }
         } else {
-            LOGGER.config("ConsulEE is not enabled. Use @EnableConsulEEClient!");
+            LOGGER.config("Consul is not enabled. Use @EnableConsulClient!");
         }
     }
 
     public void register(final String clientId) {
-        sendMessage(REGISTER_ENDPOINT, applicationConfig.toJSON());
+        sendMessageToConsul(REGISTER_ENDPOINT, "register");
 
         ScheduleExpression schedule = new ScheduleExpression();
-        schedule.second("*/3").minute("*").hour("*").start(Calendar.getInstance().getTime());
+        schedule.second("*/3").minute("*").hour("*").start(getInstance().getTime());
 
         TimerConfig config = new TimerConfig();
         config.setPersistent(false);
@@ -86,89 +92,66 @@ public class ConsulEERegistrationClient {
         LOGGER.config(() -> timer.getSchedule().toString());
     }
 
-    /**
-     * Handles incoming message.
-     *
-     * @param session The WebSocket session
-     * @param message The message
-     */
-    @OnMessage
-    public void onMessage(Session session, String message) {
-        LOGGER.config(() -> "Message: " + message);
-        sendMessage(STATUS_ENDPOINT + applicationConfig.getServiceName(), applicationConfig.toJSON());
-    }
-
     @Timeout
     public void health(Timer timer) {
-        LOGGER.config(() -> "health update: " + Calendar.getInstance().getTime());
+        LOGGER.config(() -> "health update: " + getInstance().getTime());
         LOGGER.config(() -> "Next: " + timer.getNextTimeout());
-        sendMessage(STATUS_ENDPOINT + applicationConfig.getServiceName(), applicationConfig.toJSON());
+        sendMessageToConsul(applicationConfig.getServiceName(), "health");
     }
 
-    /**
+	@PreDestroy
+	private void deregister() {
+		LOGGER.config(() -> "Deregistering " + applicationConfig.getServiceId());
+		sendMessageToConsul(applicationConfig.getServiceName(), "deregister");
+	}
+
+	/**
      * Sends message to the WebSocket server.
      *
      * @param endpoint The server endpoint
      * @param msg The message
      * @return a return message
      */
-    private String sendMessage(String endpoint, String msg) {
-
+    private void sendMessageToConsul(String endpoint, String msg) {
         LOGGER.config(() -> "Sending message: " + msg);
 
-        String returnValue = "-1";
         try {
-            WebSocketContainer container = ContainerProvider.getWebSocketContainer();
-            String uri = serviceUrl + endpoint;
-            Session session = container.connectToServer(this, URI.create(uri));
-            session.getBasicRemote().sendText(msg != null ? msg : "");
-            returnValue = session.getId();
-            
-            session.close();
-
-        } catch (DeploymentException | IOException ex) {
+            if (msg.equalsIgnoreCase("register")) {
+                agentClient = builder().build().agentClient();
+                agentClient.register(valueOf(applicationConfig.getServicePort()), Long.valueOf(applicationConfig.getServiceTTL()), applicationConfig.getServiceName(), applicationConfig.getServiceId());
+            }
+	        agentClient.pass(applicationConfig.getServiceId());
+        } catch (NotRegisteredException ex) {
             LOGGER.warning(ex.getMessage());
         }
-
-        return returnValue;
     }
 
-    @PreDestroy
-    private void deregister() {
-        LOGGER.config(() -> "Deregistering " + applicationConfig.getServiceName());
-        sendMessage(STATUS_ENDPOINT + applicationConfig.getServiceName(), null);
-    }
-
-    private void readConfiguration() throws ConsulEEConfigurationException {
+    private void readConfiguration() throws ConsulConfigurationException {
         Map<String, Object> consulConfig = Collections.EMPTY_MAP;
         try {
             Yaml yaml = new Yaml();
-            Map<String, Object> props = (Map<String, Object>) yaml.load(Thread.currentThread().getContextClassLoader().getResourceAsStream("/consulee.yml"));
-            consulConfig = (Map<String, Object>) props.get("consulee");
+            Map<String, Object> props = (Map<String, Object>) yaml.load(currentThread().getContextClassLoader().getResourceAsStream("/consul.yml"));
+            consulConfig = (Map<String, Object>) props.get("consul");
         } catch (YAMLException yExc) {
             LOGGER.config(() -> "No configuration file. Using env properties.");
         }
 
-        applicationConfig.setServiceName(ConsulEEExtensionHelper.getServiceName());
+        applicationConfig.setServiceName(getServiceName());
         final String host = readProperty("host", consulConfig);
         final String port = readProperty("port", consulConfig);
         applicationConfig.setServiceHome(host + ":" + port + "/");
         applicationConfig.setServiceRoot(readProperty("serviceRoot", consulConfig));
 
         LOGGER.config(() -> "application config: " + applicationConfig.toJSON());
-
-        serviceUrl = "ws://" + readProperty("snoopeeService", consulConfig);
     }
 
     private String readProperty(final String key, Map<String, Object> consulConfig) {
-        String property = Optional.ofNullable(System.getProperty(key))
+        String property = ofNullable(getProperty(key))
                 .orElseGet(() -> {
-                    String envProp = Optional.ofNullable(System.getenv(applicationConfig.getServiceName() + "." + key))
+                    String envProp = ofNullable(System.getenv(applicationConfig.getServiceName() + "." + key))
                             .orElseGet(() -> {
-                                String confProp = Optional.ofNullable(consulConfig.get(key))
-                                        .orElseThrow(() -> {
-                                            return new ConsulEEConfigurationException(key + " must be configured either in snoopee.yml or as env parameter");
-                                        })
+                                String confProp = ofNullable(consulConfig.get(key))
+                                        .orElseThrow(() -> new ConsulConfigurationException(key + " must be configured either in snoopee.yml or as env parameter"))
                                         .toString();
                                 return confProp;
                             });

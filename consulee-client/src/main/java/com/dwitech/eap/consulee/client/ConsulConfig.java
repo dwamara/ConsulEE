@@ -21,15 +21,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.dwitech.eap.consulee;
+package com.dwitech.eap.consulee.client;
+
+import javax.json.Json;
+import javax.json.stream.JsonGenerator;
+import java.io.StringWriter;
+import java.io.Writer;
 
 /**
- * Singleton to store the information gathered from annotation scan.
- *
- * @author Ivar Grimstad (ivar.grimstad@gmail.com)
+ * Holds the meta data for the registered service.
  */
-public final class ConsulEEExtensionHelper {
-    private boolean consulEnabled;
+public class ConsulConfig {
     private String serviceName;
     private String serviceId;
     private String serviceTTL;
@@ -37,32 +39,11 @@ public final class ConsulEEExtensionHelper {
     private String servicePort;
     private String serviceRoot;
 
-    private static final ConsulEEExtensionHelper INSTANCE = new ConsulEEExtensionHelper();
-
-    public static String getServiceName() {
-        return INSTANCE.serviceName;
+    public String getServiceName() {
+        return serviceName;
     }
-    public static void setServiceName(String serviceName) {
-        INSTANCE.serviceName = serviceName;
-    }
-
-    public static boolean isConsulEnabled() {
-        return INSTANCE.consulEnabled;
-    }
-    public static void setConsulEnabled(final boolean consulEnabled) {
-        INSTANCE.consulEnabled = consulEnabled;
-    }
-
-    public String getServiceId() { return serviceId; }
-    public void setServiceId(String serviceId) {
-        this.serviceId = serviceId;
-    }
-
-    public String getServiceTTL() {
-        return serviceTTL;
-    }
-    public void setServiceTTL(String serviceTTL) {
-        this.serviceTTL = serviceTTL;
+    public void setServiceName(String serviceName) {
+        this.serviceName = serviceName;
     }
 
     public String getServiceHome() {
@@ -72,17 +53,31 @@ public final class ConsulEEExtensionHelper {
         this.serviceHome = serviceHome;
     }
 
-    public String getServicePort() {
-        return servicePort;
-    }
-    public void setServicePort(String servicePort) {
-        this.servicePort = servicePort;
-    }
-
     public String getServiceRoot() {
         return serviceRoot;
     }
     public void setServiceRoot(String serviceRoot) {
         this.serviceRoot = serviceRoot;
+    }
+
+	public String getServiceId() { return serviceId; }
+	public void setServiceId(String serviceId) { this.serviceId = serviceId; }
+
+	public String getServiceTTL() { return serviceTTL; }
+	public void setServiceTTL(String serviceTTL) { this.serviceTTL = serviceTTL; }
+
+	public String getServicePort() { return servicePort; }
+	public void setServicePort(String servicePort) { this.servicePort = servicePort; }
+
+	public String toJSON() {
+        Writer w = new StringWriter();
+        try (JsonGenerator generator = Json.createGenerator(w)) {
+            generator.writeStartObject()
+                    .write("serviceName", serviceName)
+                    .write("serviceHome", serviceHome)
+                    .write("serviceRoot", serviceRoot)
+                    .writeEnd();
+        }
+        return w.toString();
     }
 }

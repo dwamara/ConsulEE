@@ -5,8 +5,10 @@
 
 # User-specific stuff:
 .idea/**/workspace.xml
+.idea/**/*.iml
 .idea/**/tasks.xml
 .idea/dictionaries
+*.iml
 
 # Sensitive or high-churn files:
 .idea/**/dataSources/
