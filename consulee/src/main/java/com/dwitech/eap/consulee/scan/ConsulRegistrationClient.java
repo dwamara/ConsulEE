@@ -1,25 +1,17 @@
 /*
- * The MIT License
+ * Copyright 2017 Daniel Wamara (dwamara@dwitech.com)
  *
- * Copyright 2015 Ivar Grimstad (ivar.grimstad@gmail.com).
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package com.dwitech.eap.consulee.scan;
 
@@ -27,6 +19,7 @@ import com.dwitech.eap.consulee.ConsulConfigurationException;
 import com.dwitech.eap.consulee.client.ConsulConfig;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.error.YAMLException;
+import com.google.common.net.HostAndPort;
 import com.orbitz.consul.AgentClient;
 import com.orbitz.consul.NotRegisteredException;
 
@@ -34,7 +27,6 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 import javax.ejb.*;
-import javax.websocket.ClientEndpoint;
 import java.util.Collections;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -51,13 +43,13 @@ import static java.util.logging.Logger.getLogger;
 
 /**
  * Registers with Consul and gives heartbeats every 3 second.
+ * @since 1.0.0
  */
-@ClientEndpoint @Singleton @Startup
+@Singleton @Startup
 public class ConsulRegistrationClient {
     private static final Logger LOGGER = getLogger("com.dwitech.eap.consulee");
-    private static final String REGISTER_ENDPOINT = "consulee";
 
-    private final ConsulConfig applicationConfig = new ConsulConfig();
+    private final ConsulConfig consulConfig = new ConsulConfig();
     private AgentClient agentClient;
 
     @Resource private TimerService timerService;
@@ -68,26 +60,27 @@ public class ConsulRegistrationClient {
         if (isConsulEnabled()) {
             try {
                 readConfiguration();
-                LOGGER.config(() -> "Registering " + applicationConfig.getServiceName());
-                register(applicationConfig.getServiceName());
-            } catch (ConsulConfigurationException e) {
-                LOGGER.severe(() -> "Consul is enabled but not configured properly: " + e.getMessage());
+                LOGGER.config(() -> "Registering " + consulConfig.getServiceName());
+                agentClient = builder().withHostAndPort(getConsulHostAndPort()).build().agentClient();
+                register();
+            } catch (ConsulConfigurationException ccExc) {
+                LOGGER.severe(() -> "Consul is enabled but not configured properly: " + ccExc.getMessage());
             }
         } else {
             LOGGER.config("Consul is not enabled. Use @EnableConsulClient!");
         }
     }
 
-    public void register(final String clientId) {
-        sendMessageToConsul(REGISTER_ENDPOINT, "register");
+    public void register() {
+        agentClient.register(valueOf(consulConfig.getServicePort()), Long.valueOf(consulConfig.getServiceTTL()), consulConfig.getServiceName(), consulConfig.getServiceId());
 
-        ScheduleExpression schedule = new ScheduleExpression();
+        final ScheduleExpression schedule = new ScheduleExpression();
         schedule.second("*/3").minute("*").hour("*").start(getInstance().getTime());
 
-        TimerConfig config = new TimerConfig();
+        final TimerConfig config = new TimerConfig();
         config.setPersistent(false);
 
-        Timer timer = timerService.createCalendarTimer(schedule, config);
+        final Timer timer = timerService.createCalendarTimer(schedule, config);
 
         LOGGER.config(() -> timer.getSchedule().toString());
     }
@@ -96,62 +89,58 @@ public class ConsulRegistrationClient {
     public void health(Timer timer) {
         LOGGER.config(() -> "health update: " + getInstance().getTime());
         LOGGER.config(() -> "Next: " + timer.getNextTimeout());
-        sendMessageToConsul(applicationConfig.getServiceName(), "health");
+        try {
+            agentClient.pass(consulConfig.getServiceId());
+        } catch (NotRegisteredException nrExc) {
+            nrExc.printStackTrace();
+        }
     }
 
 	@PreDestroy
 	private void deregister() {
-		LOGGER.config(() -> "Deregistering " + applicationConfig.getServiceId());
-		sendMessageToConsul(applicationConfig.getServiceName(), "deregister");
-	}
-
-	/**
-     * Sends message to the WebSocket server.
-     *
-     * @param endpoint The server endpoint
-     * @param msg The message
-     * @return a return message
-     */
-    private void sendMessageToConsul(String endpoint, String msg) {
-        LOGGER.config(() -> "Sending message: " + msg);
-
+		LOGGER.config(() -> "Deregistering " + consulConfig.getServiceId());
         try {
-            if (msg.equalsIgnoreCase("register")) {
-                agentClient = builder().build().agentClient();
-                agentClient.register(valueOf(applicationConfig.getServicePort()), Long.valueOf(applicationConfig.getServiceTTL()), applicationConfig.getServiceName(), applicationConfig.getServiceId());
-            }
-	        agentClient.pass(applicationConfig.getServiceId());
-        } catch (NotRegisteredException ex) {
-            LOGGER.warning(ex.getMessage());
+            agentClient.pass(consulConfig.getServiceId());
+        } catch (NotRegisteredException nrExc) {
+            nrExc.printStackTrace();
         }
+    }
+
+    private HostAndPort getConsulHostAndPort() {
+        return HostAndPort.fromParts(consulConfig.getConsulHost(), Integer.parseInt(consulConfig.getConsulPort())).withDefaultPort(8500);
     }
 
     private void readConfiguration() throws ConsulConfigurationException {
         Map<String, Object> consulConfig = Collections.EMPTY_MAP;
         try {
-            Yaml yaml = new Yaml();
-            Map<String, Object> props = (Map<String, Object>) yaml.load(currentThread().getContextClassLoader().getResourceAsStream("/consul.yml"));
+            final Yaml yaml = new Yaml();
+            final Map<String, Object> props = (Map<String, Object>) yaml.load(currentThread().getContextClassLoader().getResourceAsStream("/consul.yml"));
             consulConfig = (Map<String, Object>) props.get("consul");
         } catch (YAMLException yExc) {
             LOGGER.config(() -> "No configuration file. Using env properties.");
         }
 
-        applicationConfig.setServiceName(getServiceName());
-        final String host = readProperty("host", consulConfig);
-        final String port = readProperty("port", consulConfig);
-        applicationConfig.setServiceHome(host + ":" + port + "/");
-        applicationConfig.setServiceRoot(readProperty("serviceRoot", consulConfig));
+        this.consulConfig.setServiceName(getServiceName());
 
-        LOGGER.config(() -> "application config: " + applicationConfig.toJSON());
+        this.consulConfig.setServiceId(readProperty("serviceId", consulConfig));
+        //this.consulConfig.setServiceName(readProperty("serviceName", consulConfig));
+        this.consulConfig.setServiceHost(readProperty("serviceHost", consulConfig));
+        this.consulConfig.setServicePort(readProperty("servicePort", consulConfig));
+        this.consulConfig.setServiceTTL(readProperty("serviceTTL", consulConfig));
+
+        this.consulConfig.setConsulHost(readProperty("consulHost", consulConfig));
+        this.consulConfig.setConsulPort(readProperty("consulPort", consulConfig));
+
+        LOGGER.config(() -> "application config: " + this.consulConfig.toJSON());
     }
 
     private String readProperty(final String key, Map<String, Object> consulConfig) {
         String property = ofNullable(getProperty(key))
                 .orElseGet(() -> {
-                    String envProp = ofNullable(System.getenv(applicationConfig.getServiceName() + "." + key))
+                    String envProp = ofNullable(System.getenv(this.consulConfig.getServiceName() + "." + key))
                             .orElseGet(() -> {
                                 String confProp = ofNullable(consulConfig.get(key))
-                                        .orElseThrow(() -> new ConsulConfigurationException(key + " must be configured either in snoopee.yml or as env parameter"))
+                                        .orElseThrow(() -> new ConsulConfigurationException(key + " must be configured either in consul.yml or as env parameter"))
                                         .toString();
                                 return confProp;
                             });

@@ -1,31 +1,22 @@
 /*
- * The MIT License
+ * Copyright 2017 Daniel Wamara (dwamara@dwitech.com)
  *
- * Copyright 2015 Ivar Grimstad (ivar.grimstad@gmail.com).
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package com.dwitech.eap.consulee.client;
 
 import com.dwitech.eap.consulee.ConsulConfigurationException;
 import com.dwitech.eap.consulee.annotation.Consul;
-import com.dwitech.eap.consulee.client.ConsulServiceClient.Builder;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.error.YAMLException;
 
@@ -48,30 +39,19 @@ import static java.util.Optional.ofNullable;
  */
 @ApplicationScoped
 public class ConsulProducer {
-
-    private static final Logger LOGGER = Logger.getLogger("eu.agilejava.snoopee");
-
-    private Map<String, Object> consuleeConfig = Collections.EMPTY_MAP;
+    private static final Logger LOGGER = Logger.getLogger("com.dwitech.eap.consulee");
+    private Map<String, Object> consulConfig = Collections.EMPTY_MAP;
 
     /**
      * Creates a ConsulServiceClient for the named service.
-     *
      * @param ip The injection point
      * @return a configured Consul service client
      */
-    @Consul
-    @Produces
-    @Dependent
+    @Consul @Produces @Dependent
     public ConsulServiceClient lookup(InjectionPoint ip) {
-
         final String applicationName = ip.getAnnotated().getAnnotation(Consul.class).serviceName();
-
         LOGGER.config(() -> "producing " + applicationName);
-
-        String serviceUrl = "http://" + readProperty("consuleeService", consuleeConfig);
-        LOGGER.config(() -> "Service URL: " + serviceUrl);
-
-        return new Builder(applicationName).serviceUrl(serviceUrl).build();
+        return new ConsulServiceClient(applicationName);
     }
 
     private String readProperty(final String key, Map<String, Object> snoopConfig) {
@@ -86,7 +66,6 @@ public class ConsulProducer {
                             });
                     return envProp;
                 });
-
         return property;
     }
 
@@ -98,13 +77,11 @@ public class ConsulProducer {
         try {
             Yaml yaml = new Yaml();
             Map<String, Object> props = (Map<String, Object>) yaml.load(currentThread().getContextClassLoader().getResourceAsStream("/consul.yml"));
-
-            consuleeConfig = (Map<String, Object>) props.get("consul");
+            consulConfig = (Map<String, Object>) props.get("consul");
 
             if (!isConsulEnabled()) {
-                setServiceName(readProperty("serviceName", consuleeConfig));
+                setServiceName(readProperty("serviceName", consulConfig));
             }
-
         } catch (YAMLException e) {
             LOGGER.config(() -> "No configuration file. Using env properties.");
         }

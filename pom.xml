@@ -9,9 +9,36 @@
     <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
+    <name>ConsulEE Root</name>
+
     <modules>
         <module>consulee</module>
         <module>consulee-client</module>
     </modules>
+
+    <dependencyManagement>
+        <dependencies>
+
+            <dependency>
+                <groupId>javax</groupId>
+                <artifactId>javaee-api</artifactId>
+                <version>7.0</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <!-- Consul -->
+            <dependency>
+                <groupId>com.orbitz.consul</groupId>
+                <artifactId>consul-client</artifactId>
+                <version>0.13.13</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.fasterxml.jackson.dataformat</groupId>
+                <artifactId>jackson-dataformat-yaml</artifactId>
+                <version>2.5.1</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
 </project>

@@ -1,25 +1,17 @@
 /*
- * The MIT License
+ * Copyright 2017 Daniel Wamara (dwamara@dwitech.com)
  *
- * Copyright 2015 Ivar Grimstad (ivar.grimstad@gmail.com).
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package com.dwitech.eap.consulee.client;
 
@@ -32,33 +24,19 @@ import java.io.Writer;
  * Holds the meta data for the registered service.
  */
 public class ConsulConfig {
-    private String serviceName;
     private String serviceId;
-    private String serviceTTL;
-    private String serviceHome;
+    private String serviceName;
+    private String serviceHost;
     private String servicePort;
-    private String serviceRoot;
+    private String serviceTTL;
+    private String serviceRoot; // TODO add serviceRoot as key/value
 
-    public String getServiceName() {
-        return serviceName;
-    }
-    public void setServiceName(String serviceName) {
-        this.serviceName = serviceName;
-    }
+    private String consulHost;
+    private String consulPort;
 
-    public String getServiceHome() {
-        return serviceHome;
-    }
-    public void setServiceHome(String serviceHome) {
-        this.serviceHome = serviceHome;
-    }
 
-    public String getServiceRoot() {
-        return serviceRoot;
-    }
-    public void setServiceRoot(String serviceRoot) {
-        this.serviceRoot = serviceRoot;
-    }
+    public String getServiceName() { return serviceName; }
+    public void setServiceName(String serviceName) { this.serviceName = serviceName; }
 
 	public String getServiceId() { return serviceId; }
 	public void setServiceId(String serviceId) { this.serviceId = serviceId; }
@@ -69,15 +47,43 @@ public class ConsulConfig {
 	public String getServicePort() { return servicePort; }
 	public void setServicePort(String servicePort) { this.servicePort = servicePort; }
 
-	public String toJSON() {
+    public String getServiceHost() { return serviceHost; }
+    public void setServiceHost(String serviceHost) { this.serviceHost = serviceHost; }
+
+
+    public String getConsulHost() {
+        return consulHost;
+    }
+    public void setConsulHost(String consulHost) { this.consulHost = consulHost; }
+
+    public String getConsulPort() {
+        return consulPort;
+    }
+    public void setConsulPort(String consulPort) {
+        this.consulPort = consulPort;
+    }
+
+    public String toJSON() {
         Writer w = new StringWriter();
         try (JsonGenerator generator = Json.createGenerator(w)) {
             generator.writeStartObject()
+                    .write("serviceId", serviceId)
                     .write("serviceName", serviceName)
-                    .write("serviceHome", serviceHome)
+                    .write("serviceHost", serviceHost)
+                    .write("servicePort", servicePort)
                     .write("serviceRoot", serviceRoot)
-                    .writeEnd();
+                    .write("serviceTTL", serviceTTL)
+                    .write("consulHost", consulHost)
+                    .write("consulPort", consulPort)
+            .writeEnd();
         }
         return w.toString();
+    }
+
+    public String getServiceRoot() {
+        return serviceRoot;
+    }
+    public void setServiceRoot(String serviceRoot) {
+        this.serviceRoot = serviceRoot;
     }
 }
