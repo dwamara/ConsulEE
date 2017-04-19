@@ -1,38 +1,47 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
    <parent>
-      <groupId>com.dwitech.eap.commons</groupId>
-      <artifactId>consulee-root</artifactId>
+      <groupId>com.dwitech.eap</groupId>
+      <artifactId>consulsdree</artifactId>
       <version>1.0.0-SNAPSHOT</version>
    </parent>
 
    <modelVersion>4.0.0</modelVersion>
-   <groupId>com.dwitech.eap.commons</groupId>
-   <artifactId>consulee-client</artifactId>
+   <groupId>com.dwitech.eap.consulsdree</groupId>
+   <artifactId>consulsree</artifactId>
    <version>1.0.0-SNAPSHOT</version>
-
    <packaging>jar</packaging>
 
-   <name>ConsulEE Client</name>
-   <description>ConsulEE Discovery Client</description>
+   <name>ConsulSREE</name>
+   <description>Consul Service Registration</description>
 
 
    <dependencies>
+
       <dependency>
          <groupId>javax</groupId>
          <artifactId>javaee-api</artifactId>
          <version>7.0</version>
          <scope>provided</scope>
       </dependency>
+
+      <dependency>
+         <groupId>com.dwitech.eap.commons</groupId>
+         <artifactId>consulee-client</artifactId>
+         <version>1.0.0-SNAPSHOT</version>
+      </dependency>
+
+      <!-- Consul -->
+      <dependency>
+         <groupId>com.orbitz.consul</groupId>
+         <artifactId>consul-client</artifactId>
+      </dependency>
+
       <dependency>
          <groupId>com.fasterxml.jackson.dataformat</groupId>
          <artifactId>jackson-dataformat-yaml</artifactId>
       </dependency>
-      <dependency>
-         <groupId>com.google.code.gson</groupId>
-         <artifactId>gson</artifactId>
-         <version>2.7</version>
-      </dependency>
+
    </dependencies>
 
    <properties>

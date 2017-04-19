@@ -4,16 +4,17 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.dwitech.eap.commons</groupId>
-    <artifactId>consulee-root</artifactId>
+    <groupId>com.dwitech.eap</groupId>
+    <artifactId>consulsdree</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <name>ConsulEE Root</name>
+    <name>ConsulSDREE </name>
+    <description>Consul Service Discovery and Registration</description>
 
     <modules>
-        <module>consulee</module>
-        <module>consulee-client</module>
+        <module>consulsree</module>
+        <module>consulsdee</module>
     </modules>
 
     <distributionManagement>
@@ -75,7 +76,5 @@
             </plugin>
         </plugins>
     </build>
-
-
 
 </project>
