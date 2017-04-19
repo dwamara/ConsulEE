@@ -24,7 +24,7 @@ Inspired by [SnoopEE](https://github.com/ivargrimstad/snoopee/tree/master/snoope
 	* [ ] Windows
 
 
-## Maven
+## Maven (not yet on Maven Central)
 ### ConsulSREE - Consul Service Registration
 
 ```
