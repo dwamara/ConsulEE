@@ -16,7 +16,14 @@
    <name>ConsulEE Client</name>
    <description>ConsulEE Discovery Client</description>
 
+
    <dependencies>
+      <dependency>
+         <groupId>javax</groupId>
+         <artifactId>javaee-api</artifactId>
+         <version>7.0</version>
+         <scope>provided</scope>
+      </dependency>
       <dependency>
          <groupId>com.fasterxml.jackson.dataformat</groupId>
          <artifactId>jackson-dataformat-yaml</artifactId>
