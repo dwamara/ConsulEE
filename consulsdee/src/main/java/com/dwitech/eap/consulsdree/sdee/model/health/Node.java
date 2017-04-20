@@ -13,37 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.dwitech.eap.consulee.model.health;
+package com.dwitech.eap.consulsdree.sdee.model.health;
 
-import java.util.ArrayList;
-import java.util.List;
+public class Node {
+    private String Address;
+    private String Node;
 
-public class HealthCheck {
-    private List<Check> Checks = new ArrayList();
-    private Node Node;
-    private Service Service;
-
-    public HealthCheck() {
+    public Node() {
     }
 
-    public List<Check> getChecks() {
-        return this.Checks;
+    public String getAddress() {
+        return this.Address;
     }
-    public void setChecks(List<Check> Checks) {
-        this.Checks = Checks;
+    public void setAddress(String Address) {
+        this.Address = Address;
     }
 
-    public Node getNode() {
+    public String getNode() {
         return this.Node;
     }
-    public void setNode(Node Node) {
+    public void setNode(String Node) {
         this.Node = Node;
-    }
-
-    public Service getService() {
-        return this.Service;
-    }
-    public void setService(Service Service) {
-        this.Service = Service;
     }
 }

@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.dwitech.eap.consulee.service;
+package com.dwitech.eap.consulsdree.sdee.service;
 
-import com.dwitech.eap.consulee.ConsulConfigurationException;
-import com.dwitech.eap.consulee.client.ConsulConfig;
-import com.dwitech.eap.consulee.client.ConsulServiceUnavailableException;
-import com.dwitech.eap.consulee.model.DiscoveryResult;
+import com.dwitech.eap.consulsdree.sdee.ConsulConfigurationException;
+import com.dwitech.eap.consulsdree.sdee.client.ConsulConfig;
+import com.dwitech.eap.consulsdree.sdee.client.ConsulServiceUnavailableException;
+import com.dwitech.eap.consulsdree.sdee.model.DiscoveryResult;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.error.YAMLException;
 
@@ -28,6 +28,7 @@ import java.util.logging.Logger;
 
 import static java.lang.System.getProperty;
 import static java.lang.Thread.currentThread;
+import static java.util.Collections.EMPTY_MAP;
 import static java.util.Optional.ofNullable;
 import static java.util.logging.Logger.getLogger;
 
@@ -35,7 +36,7 @@ import static java.util.logging.Logger.getLogger;
  *
  */
 public class ConsulServiceDiscovery {
-    private static final Logger LOGGER = getLogger("com.dwitech.eap.consulee");
+    private static final Logger LOGGER = getLogger(ConsulServiceDiscovery.class.getName());
 
     private final String applicationName;
 
@@ -45,15 +46,15 @@ public class ConsulServiceDiscovery {
 
     public ConsulConfig discoverServiceConfiguration() {
         try {
-            final HashSet consulServiceNames = new HashSet();
+            final Set consulServiceNames = new HashSet();
             consulServiceNames.add(applicationName);
 
             final ConsulConfig consulConfig = readConfiguration();
 
             Set consulDiscoveryResults = (new ConsulService(consulConfig.getConsulHost(), consulConfig.getConsulPort())).discoverHealthyNodes(consulServiceNames);
-            Iterator ioException = consulDiscoveryResults.iterator();
-            while (ioException.hasNext()) {
-                DiscoveryResult discoveryResult = (DiscoveryResult)ioException.next();
+            Iterator consulDiscoveryResultsIt = consulDiscoveryResults.iterator();
+            while (consulDiscoveryResultsIt.hasNext()) {
+                DiscoveryResult discoveryResult = (DiscoveryResult)consulDiscoveryResultsIt.next();
                 consulConfig.setServiceHost(discoveryResult.getIp());
                 consulConfig.setServicePort(String.valueOf(discoveryResult.getPort()));
                 break;
@@ -66,7 +67,7 @@ public class ConsulServiceDiscovery {
 
     private ConsulConfig readConfiguration() throws ConsulConfigurationException {
         final ConsulConfig consulConfiguration = new ConsulConfig();
-        Map<String, Object> consulConfig = Collections.EMPTY_MAP;
+        Map<String, Object> consulConfig = EMPTY_MAP;
         try {
             final Yaml yaml = new Yaml();
             final Map<String, Object> props = (Map<String, Object>) yaml.load(currentThread().getContextClassLoader().getResourceAsStream("/consul.yml"));

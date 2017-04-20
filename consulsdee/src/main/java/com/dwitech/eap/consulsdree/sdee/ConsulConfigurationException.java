@@ -13,33 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.dwitech.eap.consulee;
+package com.dwitech.eap.consulsdree.sdee;
 
 import javax.ejb.ApplicationException;
 
 /**
  * This exception indicates that the Consul configuration is erroneous.
- *
- * @author Ivar Grimstad (ivar.grimstad@gmail.com)
  */
 @ApplicationException
 public class ConsulConfigurationException extends RuntimeException {
-
-    public ConsulConfigurationException() {
-    }
-
+    public ConsulConfigurationException() {}
     public ConsulConfigurationException(String message) {
         super(message);
     }
-
     public ConsulConfigurationException(String message, Throwable cause) {
         super(message, cause);
     }
-
     public ConsulConfigurationException(Throwable cause) {
         super(cause);
     }
-
     public ConsulConfigurationException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
     }

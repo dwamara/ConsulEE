@@ -13,20 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.dwitech.eap.consulee.client;
+package com.dwitech.eap.consulsdree.sdee.client;
 
-import com.dwitech.eap.consulee.service.ConsulServiceDiscovery;
+import com.dwitech.eap.consulsdree.sdee.service.ConsulServiceDiscovery;
 
 import javax.ws.rs.client.WebTarget;
 import java.util.logging.Logger;
 
+import static java.util.logging.Logger.getLogger;
 import static javax.ws.rs.client.ClientBuilder.newClient;
 
 /**
  * Client API for calling services registered with Consul.
  */
 public class ConsulServiceClient {
-    private static final Logger LOGGER = Logger.getLogger("com.dwitech.eap.consulee");
+    private static final Logger LOGGER = getLogger(ConsulServiceClient.class.getName());
     private final String applicationName;
 
     public ConsulServiceClient(final String applicationName) {

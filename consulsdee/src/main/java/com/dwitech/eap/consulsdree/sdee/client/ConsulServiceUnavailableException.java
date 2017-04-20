@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.dwitech.eap.consulee.client;
+package com.dwitech.eap.consulsdree.sdee.client;
 
 import javax.ejb.ApplicationException;
 

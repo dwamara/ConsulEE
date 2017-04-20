@@ -13,17 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.dwitech.eap.consulee.service;
+package com.dwitech.eap.consulsdree.sdee.service;
 
-import com.dwitech.eap.consulee.model.DiscoveryResult;
-import com.dwitech.eap.consulee.model.health.HealthCheck;
+import com.dwitech.eap.consulsdree.sdee.model.DiscoveryResult;
+import com.dwitech.eap.consulsdree.sdee.model.health.HealthCheck;
 import com.google.gson.Gson;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+
+import static java.lang.Integer.valueOf;
+import static java.lang.String.format;
+import static java.util.Arrays.stream;
 
 public final class ConsulService {
     private static final String CONSUL_HEALTH_CHECK_API_ENDPOINT_TEMPLATE = "http://%s:%d/v1/health/service/%s?%s";
@@ -43,35 +46,33 @@ public final class ConsulService {
     }
 
     public Set<DiscoveryResult> discoverHealthyNodes(Set<String> serviceNames) throws IOException {
-        HashSet result = new HashSet();
-        Iterator serviceNamesIt = serviceNames.iterator();
+        final Set result = new HashSet();
+        final Iterator serviceNamesIt = serviceNames.iterator();
 
         while(serviceNamesIt.hasNext()) {
             String serviceName = (String)serviceNamesIt.next();
             String consulServiceHealthEndPoint = this.getConsulHealthCheckApiUrl(serviceName);
             String apiResponse = Utility.readUrl(consulServiceHealthEndPoint);
             HealthCheck[] healthChecks = new Gson().fromJson(apiResponse, HealthCheck[].class);
-            Arrays.stream(healthChecks).forEach((healthCheck) -> {
+            stream(healthChecks).forEach((healthCheck) -> {
                 String ip = healthCheck.getService().getAddress();
                 int port = healthCheck.getService().getPort().intValue();
                 if(ip == null || ip.isEmpty()) {
                     ip = healthCheck.getNode().getAddress();
                 }
-
                 result.add(new DiscoveryResult(ip, port));
             });
         }
-
         return result;
     }
 
     private final String getConsulHealthCheckApiUrl(String serviceName) {
-        StringBuffer queryParam = new StringBuffer("passing");
+        final StringBuffer queryParam = new StringBuffer("passing");
         if(this.tag != null) {
             queryParam.append("&tag=");
             queryParam.append(this.tag.trim());
         }
 
-        return String.format(CONSUL_HEALTH_CHECK_API_ENDPOINT_TEMPLATE, this.consulAgentLocalWebServiceHost, Integer.valueOf(this.consulAgentLocalWebServicePort), serviceName, queryParam.toString());
+        return format(CONSUL_HEALTH_CHECK_API_ENDPOINT_TEMPLATE, this.consulAgentLocalWebServiceHost, valueOf(this.consulAgentLocalWebServicePort), serviceName, queryParam.toString());
     }
 }

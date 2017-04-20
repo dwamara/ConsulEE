@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.dwitech.eap.consulee.client;
+package com.dwitech.eap.consulsdree.sdee.client;
 
-import com.dwitech.eap.consulee.ConsulConfigurationException;
-import com.dwitech.eap.consulee.annotation.Consul;
+import com.dwitech.eap.consulsdree.sdee.ConsulConfigurationException;
+import com.dwitech.eap.consulsdree.sdee.annotation.Consul;
+import com.dwitech.eap.consulsdree.sdee.ConsulExtensionHelper;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.error.YAMLException;
 
@@ -25,22 +26,23 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.Dependent;
 import javax.enterprise.inject.Produces;
 import javax.enterprise.inject.spi.InjectionPoint;
-import java.util.Collections;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import static com.dwitech.eap.consulee.ConsulExtensionHelper.isConsulEnabled;
-import static com.dwitech.eap.consulee.ConsulExtensionHelper.setServiceName;
+import static java.lang.System.getProperty;
+import static java.lang.System.getenv;
 import static java.lang.Thread.currentThread;
+import static java.util.Collections.EMPTY_MAP;
 import static java.util.Optional.ofNullable;
+import static java.util.logging.Logger.getLogger;
 
 /**
  * CDI Producer for ConsulServiceClient.
  */
 @ApplicationScoped
 public class ConsulProducer {
-    private static final Logger LOGGER = Logger.getLogger("com.dwitech.eap.consulee");
-    private Map<String, Object> consulConfig = Collections.EMPTY_MAP;
+    private static final Logger LOGGER = getLogger(ConsulProducer.class.getName());
+    private Map<String, Object> consulConfig = EMPTY_MAP;
 
     /**
      * Creates a ConsulServiceClient for the named service.
@@ -54,12 +56,12 @@ public class ConsulProducer {
         return new ConsulServiceClient(applicationName);
     }
 
-    private String readProperty(final String key, Map<String, Object> snoopConfig) {
-        String property = ofNullable(System.getProperty(key))
+    private String readProperty(final String key) {
+        String property = ofNullable(getProperty(key))
                 .orElseGet(() -> {
-                    String envProp = ofNullable(System.getenv(key))
+                    String envProp = ofNullable(getenv(key))
                             .orElseGet(() -> {
-                                String confProp = ofNullable(snoopConfig.get(key))
+                                String confProp = ofNullable(consulConfig.get(key))
                                         .orElseThrow(() -> new ConsulConfigurationException(key + " must be configured either in consul.yml or as env or system property"))
                                         .toString();
                                 return confProp;
@@ -79,8 +81,8 @@ public class ConsulProducer {
             Map<String, Object> props = (Map<String, Object>) yaml.load(currentThread().getContextClassLoader().getResourceAsStream("/consul.yml"));
             consulConfig = (Map<String, Object>) props.get("consul");
 
-            if (!isConsulEnabled()) {
-                setServiceName(readProperty("serviceName", consulConfig));
+            if (!ConsulExtensionHelper.isConsulEnabled()) {
+                ConsulExtensionHelper.setServiceName(readProperty("serviceName"));
             }
         } catch (YAMLException e) {
             LOGGER.config(() -> "No configuration file. Using env properties.");

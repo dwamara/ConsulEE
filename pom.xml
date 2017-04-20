@@ -9,7 +9,7 @@
     <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <name>ConsulSDREE </name>
+    <name>ConsulSDREE</name>
     <description>Consul Service Discovery and Registration</description>
 
     <modules>

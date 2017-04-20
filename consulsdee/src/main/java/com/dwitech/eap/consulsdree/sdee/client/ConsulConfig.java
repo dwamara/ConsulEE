@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.dwitech.eap.consulee.client;
+package com.dwitech.eap.consulsdree.sdee.client;
 
 import javax.json.Json;
 import javax.json.stream.JsonGenerator;
@@ -22,6 +22,7 @@ import java.io.Writer;
 
 /**
  * Holds the meta data for the registered service.
+ * @since 1.0.0
  */
 public class ConsulConfig {
     private String serviceId;
@@ -63,6 +64,13 @@ public class ConsulConfig {
         this.consulPort = consulPort;
     }
 
+	public String getServiceRoot() {
+		return serviceRoot;
+	}
+	public void setServiceRoot(String serviceRoot) {
+		this.serviceRoot = serviceRoot;
+	}
+
     public String toJSON() {
         Writer w = new StringWriter();
         try (JsonGenerator generator = Json.createGenerator(w)) {
@@ -78,12 +86,5 @@ public class ConsulConfig {
             .writeEnd();
         }
         return w.toString();
-    }
-
-    public String getServiceRoot() {
-        return serviceRoot;
-    }
-    public void setServiceRoot(String serviceRoot) {
-        this.serviceRoot = serviceRoot;
     }
 }

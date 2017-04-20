@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.dwitech.eap.consulee.annotation;
+package com.dwitech.eap.consulsdree.sree.annotation;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Stereotype;
-import javax.enterprise.util.Nonbinding;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
@@ -35,11 +34,4 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Documented
 @ApplicationScoped
 @Target(TYPE)
-public @interface EnableConsulClient {
-    /**
-     * The service name.
-     * This is the unique identifier for this service when it is registered with Consul.
-     * @return The name of the service
-     */
-    @Nonbinding String serviceName();
-}
+public @interface ConsulClient {}

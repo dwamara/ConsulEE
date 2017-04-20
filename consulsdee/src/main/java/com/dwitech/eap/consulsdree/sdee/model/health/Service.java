@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.dwitech.eap.consulee.model.health;
+package com.dwitech.eap.consulsdree.sdee.model.health;
 
 import java.util.ArrayList;
 import java.util.List;

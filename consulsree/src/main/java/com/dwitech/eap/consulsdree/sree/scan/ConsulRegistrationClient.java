@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.dwitech.eap.consulee.scan;
+package com.dwitech.eap.consulsdree.sree.scan;
 
 import com.dwitech.eap.consulee.ConsulConfigurationException;
 import com.dwitech.eap.consulee.client.ConsulConfig;
@@ -36,6 +36,7 @@ import static com.dwitech.eap.consulee.ConsulExtensionHelper.isConsulEnabled;
 import static com.orbitz.consul.Consul.builder;
 import static java.lang.Integer.valueOf;
 import static java.lang.System.getProperty;
+import static java.lang.System.getenv;
 import static java.lang.Thread.currentThread;
 import static java.util.Calendar.getInstance;
 import static java.util.Optional.ofNullable;
@@ -47,7 +48,7 @@ import static java.util.logging.Logger.getLogger;
  */
 @Singleton @Startup
 public class ConsulRegistrationClient {
-    private static final Logger LOGGER = getLogger("com.dwitech.eap.consulee");
+    private static final Logger LOGGER = getLogger(ConsulRegistrationClient.class.getName());
 
     private final ConsulConfig consulConfig = new ConsulConfig();
     private AgentClient agentClient;
@@ -134,12 +135,12 @@ public class ConsulRegistrationClient {
         LOGGER.config(() -> "application config: " + this.consulConfig.toJSON());
     }
 
-    private String readProperty(final String key, Map<String, Object> consulConfig) {
+    private String readProperty(final String key, Map<String, Object> loadedConfig) {
         String property = ofNullable(getProperty(key))
                 .orElseGet(() -> {
-                    String envProp = ofNullable(System.getenv(this.consulConfig.getServiceName() + "." + key))
+                    String envProp = ofNullable(getenv(this.consulConfig.getServiceName() + "." + key))
                             .orElseGet(() -> {
-                                String confProp = ofNullable(consulConfig.get(key))
+                                String confProp = ofNullable(loadedConfig.get(key))
                                         .orElseThrow(() -> new ConsulConfigurationException(key + " must be configured either in consul.yml or as env parameter"))
                                         .toString();
                                 return confProp;

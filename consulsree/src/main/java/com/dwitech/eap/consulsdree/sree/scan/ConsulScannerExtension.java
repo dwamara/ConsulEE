@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.dwitech.eap.consulee.scan;
+package com.dwitech.eap.consulsdree.sree.scan;
 
-import com.dwitech.eap.consulee.annotation.EnableConsulClient;
+import com.dwitech.eap.consulsdree.sree.annotation.EnableConsulClient;
 
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.spi.*;
@@ -28,7 +28,7 @@ import static com.dwitech.eap.consulee.ConsulExtensionHelper.setServiceName;
  * CDI Extension that scans for @EnableConsulClient annotations.
  */
 public class ConsulScannerExtension implements Extension {
-    private static final Logger LOGGER = Logger.getLogger("com.dwitech.eap.consulee");
+    private static final Logger LOGGER = Logger.getLogger(ConsulScannerExtension.class.getName());
 
     private String serviceName;
     private boolean consulEnabled = false;

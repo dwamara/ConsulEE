@@ -13,31 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.dwitech.eap.consulee.annotation;
+package com.dwitech.eap.consulsdree.sree.annotation;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.inject.Stereotype;
 import javax.enterprise.util.Nonbinding;
-import javax.inject.Qualifier;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-import static java.lang.annotation.ElementType.FIELD;
-import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Annotation for looking up a service registered with Consul.
+ * Annotation for enabling application as Consul client.
+ * This annotation should be used to register the application (service) with Consul.
  * @since 1.0.0
  */
-@Qualifier
+@Stereotype
 @Retention(RUNTIME)
 @Documented
-@Target({FIELD, METHOD})
-public @interface Consul {
-   
-   /**
-    * The name of the service.
-    * @return The service name
-    */
-   @Nonbinding String serviceName() default "";
+@ApplicationScoped
+@Target(TYPE)
+public @interface EnableConsulClient {
+    /**
+     * The service name.
+     * This is the unique identifier for this service when it is registered with Consul.
+     * @return The name of the service
+     */
+    @Nonbinding String serviceName();
 }
