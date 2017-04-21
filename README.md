@@ -45,6 +45,9 @@ Inspired by [SnoopEE](https://github.com/ivargrimstad/snoopee/tree/master/snoope
 </dependency>
 ```
 
+### Dependencies
+1. [OrbitzWorldwide/consul-client](https://github.com/OrbitzWorldwide/consul-client)
+
 
 ## TODO
 
