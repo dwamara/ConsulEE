@@ -52,3 +52,5 @@ Inspired by [SnoopEE](https://github.com/ivargrimstad/snoopee/tree/master/snoope
 ## TODO
 
 - Add the root path of services as key/pair values in Consul
+
+Implementation profiled with the help of ![Jprofiler](https://www.ej-technologies.com/images/product_banners/jprofiler_large.png) Open Source License
